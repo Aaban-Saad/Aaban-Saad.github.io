@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aaban XP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', Arial, sans-serif;
+            background: linear-gradient(135deg, #003d7a 0%, #0055cc 100%);
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Desktop */
+        #desktop {
+            width: 100%;
+            height: calc(100vh - 30px);
+            position: relative;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* Desktop Icons */
+        .desktop-icon {
+            position: absolute;
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 2px;
+            transition: background 0.1s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-icon:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .desktop-icon.selected {
+            background: rgba(100, 150, 255, 0.4);
+            border: 1px dotted #fff;
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #c0c0c0, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .icon-label {
+            color: white;
+            font-size: 11px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            word-break: break-word;
+        }
+
+        /* Window Styles */
+        .window {
+            position: absolute;
+            background: #ece9d8;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            box-shadow: inset 1px 1px #ffffff, inset -1px -1px #0a0e27;
+            display: none;
+            flex-direction: column;
+            min-width: 300px;
+            min-height: 200px;
+            z-index: 1;
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window-title {
+            background: linear-gradient(90deg, #000080, #1084d7);
+            color: white;
+            padding: 2px 2px 2px 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: move;
+            height: 22px;
+            user-select: none;
+        }
+
+        .window-title-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .window-icon-title {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #c0c0c0, #808080);
+            border: 1px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .window-btn {
+            width: 16px;
+            height: 14px;
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 1px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: black;
+            user-select: none;
+        }
+
+        .window-btn:active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+        }
+
+        .window-content {
+            flex: 1;
+            background: white;
+            overflow: auto;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        /* Window status bar */
+        .window-status {
+            background: linear-gradient(90deg, #dfdfdf, #808080);
+            border-top: 1px solid #dfdfdf;
+            padding: 2px 4px;
+            font-size: 11px;
+            color: #000;
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Taskbar */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(90deg, #000080, #1084d7);
+            border-top: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            display: flex;
+            align-items: center;
+            padding: 2px 4px;
+            gap: 3px;
+            z-index: 10000;
+        }
+
+        .start-btn {
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            user-select: none;
+        }
+
+        .start-btn:active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+        }
+
+        .taskbar-separator {
+            width: 2px;
+            height: 24px;
+            background: linear-gradient(90deg, #dfdfdf, #808080);
+            border-left: 1px solid #ffffff;
+        }
+
+        .taskbar-item {
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+        }
+
+        .taskbar-item:active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+        }
+
+        .taskbar-item.active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+            font-weight: bold;
+        }
+
+        .clock {
+            margin-left: auto;
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            padding: 2px 8px;
+            font-size: 11px;
+            user-select: none;
+        }
+
+        /* Start Menu */
+        #start-menu {
+            position: fixed;
+            bottom: 32px;
+            left: 0;
+            width: 300px;
+            background: #ece9d8;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            z-index: 9999;
+        }
+
+        #start-menu.active {
+            display: flex;
+        }
+
+        .start-menu-header {
+            background: linear-gradient(90deg, #000080, #1084d7);
+            color: white;
+            padding: 30px 10px 10px 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 2px solid #808080;
+        }
+
+        .start-menu-header-subtitle {
+            font-size: 11px;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        .start-menu-items {
+            padding: 4px 0;
+        }
+
+        .start-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            border: 1px solid transparent;
+        }
+
+        .start-menu-item:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .start-menu-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #c0c0c0, #808080);
+            border: 1px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .start-menu-separator {
+            height: 1px;
+            background: #808080;
+            margin: 4px 8px;
+            border-bottom: 1px solid #dfdfdf;
+        }
+
+        .start-menu-footer {
+            background: linear-gradient(180deg, #dfdfdf, #c0c0c0);
+            border-top: 1px solid #ffffff;
+            padding: 6px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .start-menu-footer-btn {
+            flex: 1;
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .start-menu-footer-btn:hover {
+            background: linear-gradient(180deg, #f0f0f0, #909090);
+        }
+
+        .start-menu-footer-btn:active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+        }
+
+        /* About Window */
+        .portfolio-content {
+            padding: 12px;
+        }
+
+        .portfolio-content h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #000080;
+        }
+
+        .portfolio-content p {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .portfolio-content ul {
+            margin-left: 16px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .portfolio-content li {
+            margin-bottom: 4px;
+        }
+
+        /* Text Editor */
+        textarea.editor {
+            width: 100%;
+            height: 97%;
+            border: none;
+            padding: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            resize: none;
+            background: white;
+            color: #000;
+        }
+
+        /* Calculator */
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3px;
+            padding: 8px;
+        }
+
+        .calc-display {
+            grid-column: 1 / -1;
+            background: #c0c0c0;
+            border: 2px inset;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            padding: 4px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin-bottom: 4px;
+            height: 32px;
+            line-height: 24px;
+            background: linear-gradient(180deg, #f0f0f0, #e0e0e0);
+        }
+
+        .calc-btn {
+            background: linear-gradient(180deg, #dfdfdf, #808080);
+            border: 2px solid;
+            border-color: #dfdfdf #0a0e27 #0a0e27 #dfdfdf;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            user-select: none;
+            min-height: 30px;
+        }
+
+        .calc-btn:active {
+            border-color: #0a0e27 #dfdfdf #dfdfdf #0a0e27;
+        }
+
+        .calc-btn.span-2 {
+            grid-column: span 2;
+        }
+
+        /* File Explorer */
+        .file-list {
+            padding: 4px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px;
+            margin-bottom: 2px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="desktop"></div>
+
+    <div id="start-menu">
+        <div class="start-menu-header">
+            Aaban XP
+            <div class="start-menu-header-subtitle">Windows Edition</div>
+        </div>
+        <div class="start-menu-items">
+            <div class="start-menu-item" data-app="about">
+                <div class="start-menu-icon">📄</div>
+                <span>About Me</span>
+            </div>
+            <!-- <div class="start-menu-item" data-app="files">
+                <div class="start-menu-icon">📁</div>
+                <span>My Projects</span>
+            </div> -->
+            <div class="start-menu-separator"></div>
+            <div class="start-menu-item" data-app="calc">
+                <div class="start-menu-icon">🧮</div>
+                <span>Calculator</span>
+            </div>
+            <div class="start-menu-item" data-app="notepad">
+                <div class="start-menu-icon">📝</div>
+                <span>Notepad</span>
+            </div>
+        </div>
+        <div class="start-menu-footer">
+            <button class="start-menu-footer-btn" onclick="alert('Thanks for visiting my portfolio! 😊')">
+                <span>💡</span>
+                <span>Help</span>
+            </button>
+            <button class="start-menu-footer-btn" onclick="alert('Shutting down... Just kidding! 😄')">
+                <span>🔌</span>
+                <span>Turn Off</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="taskbar">
+        <button class="start-btn" id="start-btn">🪟 Start</button>
+        <div class="taskbar-separator"></div>
+        <div class="clock" id="clock">00:00</div>
+    </div>
+
+    <script>
+        let zIndex = 100;
+        let draggedWindow = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Desktop apps configuration
+        const apps = [
+            {
+                id: 'about',
+                name: 'about_me.md',
+                icon: '📄',
+                x: 20,
+                y: 20,
+                width: 500,
+                height: 400,
+                type: 'portfolio'
+            },
+            {
+                id: 'calc',
+                name: 'Calculator',
+                icon: '🧮',
+                x: 20,
+                y: 120,
+                width: 250,
+                height: 320,
+                type: 'calculator'
+            },
+            {
+                id: 'notepad',
+                name: 'Notepad',
+                icon: '📝',
+                x: 120,
+                y: 20,
+                width: 400,
+                height: 300,
+                type: 'notepad'
+            },
+            // {
+            //     id: 'files',
+            //     name: 'My Projects',
+            //     icon: '📁',
+            //     x: 120,
+            //     y: 120,
+            //     width: 350,
+            //     height: 300,
+            //     type: 'files'
+            // }
+        ];
+
+        // Initialize desktop
+        function initDesktop() {
+            const desktop = document.getElementById('desktop');
+
+            apps.forEach((app, idx) => {
+                const iconEl = document.createElement('div');
+                iconEl.className = 'desktop-icon';
+                iconEl.style.left = app.x + 'px';
+                iconEl.style.top = app.y + 'px';
+                iconEl.innerHTML = `
+                    <div class="icon-image">${app.icon}</div>
+                    <div class="icon-label">${app.name}</div>
+                `;
+                iconEl.ondblclick = () => openWindow(app.id);
+                iconEl.onclick = () => selectIcon(iconEl);
+                desktop.appendChild(iconEl);
+            });
+        }
+
+        // Start Menu functionality
+        const startBtn = document.getElementById('start-btn');
+        const startMenu = document.getElementById('start-menu');
+
+        startBtn.onclick = (e) => {
+            e.stopPropagation();
+            startMenu.classList.toggle('active');
+        };
+
+        // Start menu items
+        document.querySelectorAll('.start-menu-item').forEach(item => {
+            item.onclick = () => {
+                const appId = item.getAttribute('data-app');
+                if (appId) {
+                    openWindow(appId);
+                    startMenu.classList.remove('active');
+                }
+            };
+        });
+
+        // Close start menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!startMenu.contains(e.target) && !startBtn.contains(e.target)) {
+                startMenu.classList.remove('active');
+            }
+        });
+
+        // Create and open window
+        function openWindow(appId) {
+            const app = apps.find(a => a.id === appId);
+            if (!app) return;
+
+            let windowEl = document.getElementById(`window-${appId}`);
+
+            if (!windowEl) {
+                windowEl = createWindow(app);
+                document.body.appendChild(windowEl);
+            }
+
+            windowEl.classList.add('active');
+            bringToFront(appId);
+            updateTaskbar();
+        }
+
+        function createWindow(app) {
+            const windowEl = document.createElement('div');
+            windowEl.id = `window-${app.id}`;
+            windowEl.className = 'window';
+            windowEl.style.left = (app.x + 50) + 'px';
+            windowEl.style.top = (app.y + 50) + 'px';
+            windowEl.style.width = app.width + 'px';
+            windowEl.style.height = app.height + 'px';
+            windowEl.style.zIndex = zIndex++;
+
+            const title = document.createElement('div');
+            title.className = 'window-title';
+            title.innerHTML = `
+                <div class="window-title-text">
+                    <div class="window-icon-title">${app.icon}</div>
+                    <span>${app.name}</span>
+                </div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" title="Minimize">_</button>
+                    <button class="window-btn maximize" title="Maximize">□</button>
+                    <button class="window-btn close" title="Close">✕</button>
+                </div>
+            `;
+
+            const content = document.createElement('div');
+            content.className = 'window-content';
+
+            // Render different content based on app type
+            if (app.type === 'portfolio') {
+                content.innerHTML = `
+                    <div class="portfolio-content">
+                        <h2>👨‍💻 About Me</h2>
+                        <p>
+                            Aaban Saad is a Computer Science & Engineering student at North South University and a versatile full-stack developer and designer. 
+                            He specializes in Next.js and modern web technologies, works across React, Tailwind, Python, Supabase, and is also proficient in 3D and web graphics using three.js and react-three-fiber. 
+                            He has led full-stack development and UI/UX design on multiple commercial projects.
+                        </p>
+
+                        <h2>Skills</h2>
+                        <ul>
+                            <li><strong>Full-Stack Web:</strong> Next.js, React, TypeScript, Node.js, Supabase, Firebase, MongoDB, Python</li>
+                            <li><strong>UI & Graphics:</strong> ShadCn, Motion, three.js, react-three-fiber</li>
+                            <li><strong>Design & Editing:</strong> Photoshop, Illustrator, Photopea, Inkscape, Blender, DaVinci Resolve</li>
+                        </ul>
+
+                        <h2>Experience</h2>
+                        <ul>
+                            <li>Full-stack developer with strong expertise in modern, production-ready web technologies</li>
+                            <li>Led full-stack development and UI/UX design for multiple commercial products</li>
+                            <li>Co-founder & CEO of Chatpoka Technologies</li>
+                            <li>Experience delivering websites, web apps, UI/UX, branding, digital marketing & SEO</li>
+                        </ul>
+
+                        <h2>Contact</h2>
+                        <ul>
+                            <li>🐱 GitHub: <a href="https://github.com/Aaban-Saad" target="_blank">github.com/Aaban-Saad</a></li>
+                            <li>💼 LinkedIn: <a href="https://www.linkedin.com/in/aaban-saad/" target="_blank">linkedin.com/in/aaban-saad</a></li>
+                            <li>🌐 Chatpoka Technologies: <a href="https://chatpoka.com" target="_blank">chatpoka.com</a></li>
+                        </ul>
+                    </div>
+
+
+                `;
+            } else if (app.type === 'notepad') {
+                content.innerHTML = `<textarea class="editor" placeholder="Start typing..."></textarea>`;
+            } else if (app.type === 'calculator') {
+                content.innerHTML = `
+                    <div class="calculator">
+                        <div class="calc-display" id="calcDisplay-${app.id}">0</div>
+                        <button class="calc-btn" data-value="7">7</button>
+                        <button class="calc-btn" data-value="8">8</button>
+                        <button class="calc-btn" data-value="9">9</button>
+                        <button class="calc-btn" data-value="/">/</button>
+                        <button class="calc-btn" data-value="4">4</button>
+                        <button class="calc-btn" data-value="5">5</button>
+                        <button class="calc-btn" data-value="6">6</button>
+                        <button class="calc-btn" data-value="*">*</button>
+                        <button class="calc-btn" data-value="1">1</button>
+                        <button class="calc-btn" data-value="2">2</button>
+                        <button class="calc-btn" data-value="3">3</button>
+                        <button class="calc-btn" data-value="-">-</button>
+                        <button class="calc-btn span-2" data-value="0">0</button>
+                        <button class="calc-btn" data-value=".">.</button>
+                        <button class="calc-btn" data-value="+">+</button>
+                        <button class="calc-btn span-2" data-value="C">C</button>
+                        <button class="calc-btn span-2" data-value="=">=</button>
+                    </div>
+                `;
+                setTimeout(() => initCalculator(windowEl, app.id), 0);
+            } else if (app.type === 'files') {
+                content.innerHTML = `
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">💼</div>
+                            <span>E-commerce Platform</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">💬</div>
+                            <span>Real-time Chat App</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">📊</div>
+                            <span>Data Visualization Dashboard</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">🎮</div>
+                            <span>Game Development Project</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">🌐</div>
+                            <span>Portfolio Website</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon">📱</div>
+                            <span>Mobile App Design</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const status = document.createElement('div');
+            status.className = 'window-status';
+            status.textContent = 'Ready';
+
+            windowEl.appendChild(title);
+            windowEl.appendChild(content);
+            windowEl.appendChild(status);
+
+            // Window controls
+            const minimizeBtn = title.querySelector('.minimize');
+            const maximizeBtn = title.querySelector('.maximize');
+            const closeBtn = title.querySelector('.close');
+
+            minimizeBtn.onclick = (e) => {
+                e.stopPropagation();
+                minimizeWindow(app.id);
+            };
+            maximizeBtn.onclick = (e) => {
+                e.stopPropagation();
+                toggleMaximize(app.id, windowEl, app);
+            };
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                closeWindow(app.id);
+            };
+
+            // Dragging
+            title.onmousedown = (e) => {
+                if (!e.target.classList.contains('window-btn')) {
+                    startDrag(e, windowEl, app.id);
+                }
+            };
+            windowEl.onclick = () => bringToFront(app.id);
+
+            return windowEl;
+        }
+
+        function startDrag(e, windowEl, appId) {
+            if (windowEl.dataset.maximized === 'true') return;
+
+            draggedWindow = windowEl;
+            offsetX = e.clientX - windowEl.offsetLeft;
+            offsetY = e.clientY - windowEl.offsetTop;
+            bringToFront(appId);
+
+            document.onmousemove = (e) => {
+                if (draggedWindow) {
+                    draggedWindow.style.left = (e.clientX - offsetX) + 'px';
+                    draggedWindow.style.top = (e.clientY - offsetY) + 'px';
+                }
+            };
+
+            document.onmouseup = () => {
+                draggedWindow = null;
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+        }
+
+        function bringToFront(appId) {
+            const windowEl = document.getElementById(`window-${appId}`);
+            if (windowEl) {
+                windowEl.style.zIndex = zIndex++;
+            }
+        }
+
+        function minimizeWindow(appId) {
+            const windowEl = document.getElementById(`window-${appId}`);
+            windowEl.classList.remove('active');
+            updateTaskbar();
+        }
+
+        function toggleMaximize(appId, windowEl, app) {
+            if (windowEl.dataset.maximized === 'true') {
+                windowEl.style.left = (app.x + 50) + 'px';
+                windowEl.style.top = (app.y + 50) + 'px';
+                windowEl.style.width = app.width + 'px';
+                windowEl.style.height = app.height + 'px';
+                windowEl.dataset.maximized = 'false';
+            } else {
+                windowEl.style.left = '0px';
+                windowEl.style.top = '0px';
+                windowEl.style.width = '100vw';
+                windowEl.style.height = 'calc(100vh - 30px)';
+                windowEl.dataset.maximized = 'true';
+            }
+        }
+
+        function closeWindow(appId) {
+            const windowEl = document.getElementById(`window-${appId}`);
+            windowEl.remove();
+            updateTaskbar();
+        }
+
+        function selectIcon(iconEl) {
+            document.querySelectorAll('.desktop-icon').forEach(el => {
+                el.classList.remove('selected');
+            });
+            iconEl.classList.add('selected');
+        }
+
+        function updateTaskbar() {
+            const taskbar = document.getElementById('taskbar');
+            const existingItems = taskbar.querySelectorAll('.taskbar-item');
+            existingItems.forEach(el => el.remove());
+
+            const separator = taskbar.querySelector('.taskbar-separator');
+
+            apps.forEach(app => {
+                const windowEl = document.getElementById(`window-${app.id}`);
+                if (windowEl) {
+                    const item = document.createElement('button');
+                    item.className = 'taskbar-item';
+                    if (windowEl.classList.contains('active')) {
+                        item.classList.add('active');
+                    }
+                    item.textContent = app.name;
+                    item.onclick = () => {
+                        if (windowEl.classList.contains('active')) {
+                            windowEl.classList.remove('active');
+                        } else {
+                            document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+                            windowEl.classList.add('active');
+                            bringToFront(app.id);
+                        }
+                        updateTaskbar();
+                    };
+                    taskbar.insertBefore(item, taskbar.querySelector('.clock'));
+                }
+            });
+        }
+
+        function initCalculator(windowEl, appId) {
+            let display = windowEl.querySelector(`#calcDisplay-${appId}`);
+            let currentValue = '0';
+            let previousValue = '';
+            let operation = null;
+            let shouldResetDisplay = false;
+
+            const buttons = windowEl.querySelectorAll('.calc-btn');
+            buttons.forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const value = btn.getAttribute('data-value');
+
+                    if (!isNaN(value) || value === '.') {
+                        if (value === '.' && currentValue.includes('.')) return;
+                        if (shouldResetDisplay) {
+                            currentValue = value;
+                            shouldResetDisplay = false;
+                        } else {
+                            currentValue = currentValue === '0' ? value : currentValue + value;
+                        }
+                    }
+                    else if (value === 'C') {
+                        currentValue = '0';
+                        previousValue = '';
+                        operation = null;
+                        shouldResetDisplay = false;
+                    }
+                    else if (value === '=') {
+                        if (operation && previousValue !== '') {
+                            let result;
+                            const prev = parseFloat(previousValue);
+                            const curr = parseFloat(currentValue);
+                            switch (operation) {
+                                case '+': result = prev + curr; break;
+                                case '-': result = prev - curr; break;
+                                case '*': result = prev * curr; break;
+                                case '/': result = curr !== 0 ? prev / curr : 'Error'; break;
+                                default: result = curr;
+                            }
+                            currentValue = result.toString();
+                            operation = null;
+                            previousValue = '';
+                            shouldResetDisplay = true;
+                        }
+                    }
+                    else if (['+', '-', '*', '/'].includes(value)) {
+                        if (operation && !shouldResetDisplay && previousValue !== '') {
+                            const prev = parseFloat(previousValue);
+                            const curr = parseFloat(currentValue);
+                            let result;
+                            switch (operation) {
+                                case '+': result = prev + curr; break;
+                                case '-': result = prev - curr; break;
+                                case '*': result = prev * curr; break;
+                                case '/': result = curr !== 0 ? prev / curr : 'Error'; break;
+                                default: result = curr;
+                            }
+                            currentValue = result.toString();
+                        }
+                        previousValue = currentValue;
+                        operation = value;
+                        shouldResetDisplay = true;
+                    }
+
+                    display.textContent = currentValue;
+                };
+            });
+        }
+
+        // Update clock
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            clock.textContent = `${hours}:${minutes}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Click desktop to deselect icons
+        document.getElementById('desktop').addEventListener('click', (e) => {
+            if (e.target.id === 'desktop') {
+                document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+            }
+        });
+
+        // Initialize
+        initDesktop();
+    </script>
+</body>
+
+</html>
